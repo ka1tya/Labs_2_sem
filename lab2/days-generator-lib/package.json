@@ -1,0 +1,19 @@
+{
+  "name": "days-iterator-lib",
+  "version": "1.0.0",
+  "description": "A library for infinite day-of-week iteration with timeout control.",
+  "main": "src/index.js",
+  "authors": [
+    {
+      "name": "Your Name",
+      "email": "your@email.com"
+    }
+  ],
+  "license": "MIT",
+  "keywords": [
+    "generator",
+    "iterator",
+    "days",
+    "timeout"
+  ]
+}
