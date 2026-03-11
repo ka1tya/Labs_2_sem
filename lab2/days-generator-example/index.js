@@ -3,7 +3,7 @@
 const { daysGenerator, iterateWithTimeout } = require("days-iterator-lib");
 
 //Example 1
-console.log("=== Example 1: Manual generator stepping ===");
+console.log("Example 1: ");
 const gen1 = daysGenerator();
 
 for (let i = 0; i < 9; i++) {
@@ -12,13 +12,13 @@ for (let i = 0; i < 9; i++) {
 }
 
 //Example 2
-console.log("\n=== Example 2: Auto-iterate for 5 seconds ===");
+console.log("\nExample 2: ");
 const gen2 = daysGenerator();
 iterateWithTimeout(gen2, 5);
 
 //Example 3:
 setTimeout(() => {
-  console.log("\n=== Example 3: Auto-iterate for 3 seconds ===");
+  console.log("\nExample 3: ");
   const gen3 = daysGenerator();
   iterateWithTimeout(gen3, 3);
 }, 6500);
