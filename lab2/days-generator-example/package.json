@@ -1,0 +1,19 @@
+{
+  "name": "days-generatord-example",
+  "version": "1.0.0",
+  "description": "Example project demonstrating usage of days-generator-lib.",
+  "main": "index.js",
+  "authors": [
+    {
+      "name": "Varenka Kateryna",
+      "email": "kattyavv1@gmail.com"
+    }
+  ],
+  "license": "MIT",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "days-generator-lib": "file:../days-generator-lib"
+  }
+}

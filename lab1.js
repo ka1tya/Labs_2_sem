@@ -10,6 +10,7 @@ function* daysGenerator() {
     "Saturday",
     "Sunday",
   ];
+<<<<<<< HEAD
   let index = 0;
 
   while (true) {
@@ -18,6 +19,12 @@ function* daysGenerator() {
 
     if (index === days.length) {
       index = 0;
+=======
+
+  while (true) {
+    for (const day of days) {
+      yield day;
+>>>>>>> cbfdd52b654da2da863638480f31e292e78e7594
     }
   }
 }
