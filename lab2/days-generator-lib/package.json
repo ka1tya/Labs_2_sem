@@ -2,7 +2,7 @@
   "name": "days-generator-lib",
   "version": "1.0.0",
   "description": "A library for infinite day-of-week iteration with timeout control.",
-  "main": "src/index.js",
+  "main": "index.js",
   "authors": [
     {
       "name": "Varenko Kateryna",
@@ -17,4 +17,3 @@
     "timeout"
   ]
 }
-

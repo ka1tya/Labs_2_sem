@@ -1,5 +1,5 @@
 {
-  "name": "days-generatord-example",
+  "name": "days-generator-example",
   "version": "1.0.0",
   "description": "Example project demonstrating usage of days-generator-lib.",
   "main": "index.js",

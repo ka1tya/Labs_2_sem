@@ -1,6 +1,6 @@
 "use strict";
 
-const { daysGenerator, iterateWithTimeout } = require("days-iterator-lib");
+const { daysGenerator, iterateWithTimeout } = require("days-generator-lib");
 
 //Example 1
 console.log("Example 1: ");

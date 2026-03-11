@@ -1,6 +1,6 @@
 "use strict";
 
-const { daysGenerator } = require("./daysGenerator");
-const { iterateWithTimeout } = require("./iterateWithTimeout");
+const { daysGenerator } = require("./src/daysGenerator");
+const { iterateWithTimeout } = require("./src/iterateWithTimeout");
 
 module.exports = { daysGenerator, iterateWithTimeout };
