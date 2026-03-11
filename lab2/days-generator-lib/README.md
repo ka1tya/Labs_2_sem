@@ -32,7 +32,7 @@ cd days-generator-example
 node index.js
 ```
 
-##API
+## API
 
 ### `daysGenerator()`
 Нескінчений генератор, який перебирає дні тижня (Monday → Sunday) циклічно.
