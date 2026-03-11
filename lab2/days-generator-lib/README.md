@@ -43,7 +43,7 @@ console.log(gen.next().value); // "Monday"
 console.log(gen.next().value); // "Tuesday"
 ```
 
-### `iterateWithTimeout(iterator, seconds, [onValue], [onEnd])`
+### `iterateWithTimeout(iterator, seconds)`
 Викликає `iterator.next()` щосекунди та зупиняється через вказану кількість секунд.
 
 | Parameter  | Type       | Description                                          |
