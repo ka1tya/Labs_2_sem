@@ -9,7 +9,7 @@ lab2/
         src/
             daysGenerator.js
             iterateWithTimeout.js
-            index.js
+        index.js
         README.md
         LICENSE
         package.json
@@ -17,6 +17,7 @@ lab2/
     days-generator-example/    
         index.js
         package.json
+        .gitignore
 ```
 
 ## Встановлення
@@ -30,6 +31,8 @@ npm install
 cd days-generator-example
 node index.js
 ```
+
+##API
 
 ### `daysGenerator()`
 Нескінчений генератор, який перебирає дні тижня (Monday → Sunday) циклічно.
@@ -47,10 +50,8 @@ console.log(gen.next().value); // "Tuesday"
 |------------|------------|------------------------------------------------------|
 | `iterator` | `Iterator` | Будь-який JS ітератор або генератор                  |
 | `seconds`  | `number`   | Тривалість у секундах                                |
-| `onValue`  | `function` | Необов'язковий callback `(iteration, value) => void` |
-| `onEnd`    | `function` | Необов'язковий callback `(reason) => void`           |
 ```
-const { daysGenerator, iterateWithTimeout } = require("days-iterator-lib");
+const { daysGenerator, iterateWithTimeout } = require("days-generator-lib");
 const gen = daysGenerator();
 iterateWithTimeout(gen, 5);
 ```
