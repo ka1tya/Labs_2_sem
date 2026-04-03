@@ -79,3 +79,33 @@ class Queue {
     return this.items.length;
   }
 }
+
+const queue = new Queue();
+
+queue.enqueue("wash dishes", 2);
+queue.enqueue("go for a walk", 5);
+queue.enqueue("call mom", 5);
+queue.enqueue("watch tik tok", 1);
+queue.enqueue("do lab", 8);
+
+console.log("Highest priority:", queue.peek("highest"));
+console.log("Lowest priority: ", queue.peek("lowest"));
+console.log("Oldest inserted: ", queue.peek("oldest"));
+console.log("Newest inserted: ", queue.peek("newest"));
+
+console.log("\nDequeue by highest priority:");
+console.log(queue.dequeue("highest"));
+console.log(queue.dequeue("highest"));
+console.log(queue.dequeue("highest"));
+console.log(queue.dequeue("highest"));
+console.log(queue.dequeue("highest"));
+
+const queue2 = new Queue();
+
+queue2.enqueue("first", 1);
+queue2.enqueue("second", 2);
+queue2.enqueue("third", 3);
+
+console.log("FIFO:", queue2.dequeue("oldest"));
+console.log("LIFO:", queue2.dequeue("newest"));
+console.log("Left:", queue2.dequeue("oldest"));
