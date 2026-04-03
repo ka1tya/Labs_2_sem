@@ -13,66 +13,62 @@ class Queue {
   }
 
   enqueue(value, priority) {
-    const newItem = new QueueItem(value, priority, this.counter);
+    const item = new QueueItem(value, priority, this.counter);
     this.counter++;
-    this.items.push(newItem);
+    this.items.push(item);
   }
 
-  _findItem(mode) {
+  _findIndex(mode) {
     if (this.items.length === 0) {
       throw new Error("Queue is empty");
     }
 
     if (mode === "oldest") {
-      return this.items[0];
+      return 0;
     }
 
     if (mode === "newest") {
-      return this.items[this.items.length - 1];
+      return this.items.length - 1;
     }
 
-    if (mode === "highest") {
-      let best = this.items[0];
-      for (const item of this.items) {
-        const betterP = item.priority > best.priority;
-        const sameP =
-          item.priority === best.priority && item.sequence < best.sequence;
+    let index = 0;
+    for (let i = 1; i < this.items.length; i++) {
+      const current = this.items[i];
+      const best = this.items[index];
 
-        if (betterP || sameP) {
-          best = item;
+      if (mode === "highest") {
+        if (
+          current.priority > best.priority ||
+          (current.priority === best.priority &&
+            current.sequence < best.sequence)
+        ) {
+          index = i;
         }
       }
-      return best;
-    }
 
-    if (mode === "lowest") {
-      let best = this.items[0];
-      for (const item of this.items) {
-        const worseP = item.priority < best.priority;
-        const sameP =
-          item.priority === best.priority && item.sequence < best.sequence;
-
-        if (worseP || sameP) {
-          best = item;
+      if (mode === "lowest") {
+        if (
+          current.priority < best.priority ||
+          (current.priority === best.priority &&
+            current.sequence < best.sequence)
+        ) {
+          index = i;
         }
       }
-      return best;
     }
-
-    throw new Error(
-      `Unknown mode "${mode}". Use: highest, lowest, oldest, newest`,
-    );
+    return index;
   }
 
   peek(mode) {
-    return this._findItem(mode).value;
+    const index = this._findIndex(mode);
+    return this.items[index].value;
   }
 
   dequeue(mode) {
-    const found = this._findItem(mode);
-    const index = this.items.indexOf(found);
+    const index = this._findIndex(mode);
+    const value = this.items[index].value;
     this.items.splice(index, 1);
-    return found.value;
+    return value;
   }
 }
 
@@ -89,7 +85,7 @@ console.log("Lowest priority: ", queue.peek("lowest"));
 console.log("Oldest inserted: ", queue.peek("oldest"));
 console.log("Newest inserted: ", queue.peek("newest"));
 
-console.log("\nDequeue by highest priority:");
+console.log("Dequeue by highest priority:");
 console.log(queue.dequeue("highest"));
 console.log(queue.dequeue("highest"));
 console.log(queue.dequeue("highest"));
