@@ -28,3 +28,28 @@ function filterCallback(arr, check, done, signal) {
     });
   });
 }
+
+function filterPromise(arr, check, signal) {
+  return new Promise((resolve, reject) => {
+    if (signal.aborted) return reject(new Error("Filter was cancelled"));
+
+    signal.addEventListener("abort", () => {
+      reject(new Error("Filter was cancelled"));
+    });
+
+    const checks = arr.map((item, i) =>
+      check(item, i).then((pass) => ({ i, item, pass })),
+    );
+
+    Promise.all(checks)
+      .then((results) => {
+        const result = results
+          .filter((x) => x.pass)
+          .sort((a, b) => a.i - b.i)
+          .map((x) => x.item);
+
+        resolve(result);
+      })
+      .catch(reject);
+  });
+}
