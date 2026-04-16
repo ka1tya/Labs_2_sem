@@ -42,7 +42,69 @@ async function* readCSV(filePath) {
       id: Number(id),
       category,
       amount: Number(amount),
-      status,
+      status: status.trim(),
     };
   }
 }
+
+async function* filter(source, fn) {
+  for await (const item of source) {
+    if (fn(item)) yield item;
+  }
+}
+
+async function* map(source, fn) {
+  for await (const item of source) {
+    yield fn(item);
+  }
+}
+
+async function aggregate(source) {
+  const stats = {};
+  let total = 0;
+
+  for await (const item of source) {
+    total++;
+
+    if (!stats[item.category]) {
+      stats[item.category] = { count: 0, sum: 0 };
+    }
+    stats[item.category].count++;
+    stats[item.category].sum += item.amount;
+  }
+
+  return { total, stats };
+}
+
+async function main() {
+  const file = path.join(__dirname, "data.csv");
+
+  await generateCSV(file, 100000);
+
+  const start = Date.now();
+
+  const rows = readCSV(file);
+  const completed = filter(rows, (r) => r.status === "completed");
+  const withUAH = map(completed, (r) => ({
+    ...r,
+    amountUAH: +(r.amount * 40).toFixed(2),
+  }));
+
+  const result = await aggregate(withUAH);
+
+  const time = ((Date.now() - start) / 1000).toFixed(2);
+
+  console.log(`Processed ${result.total}`);
+  console.log(`Time: ${time}s\n`);
+
+  for (let key in result.stats) {
+    const s = result.stats[key];
+    console.log(
+      `${key}: count=${s.count}, avg=${(s.sum / s.count).toFixed(2)}`,
+    );
+  }
+
+  fs.unlinkSync(file);
+}
+
+main().catch(console.error);
