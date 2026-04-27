@@ -7,30 +7,45 @@ async function generateCSV(filePath, totalRows = 100000) {
   const statuses = ["completed", "pending", "failed"];
 
   const ws = fs.createWriteStream(filePath);
-  ws.write("id, category, amount, status\n");
 
-  for (let i = 1; i <= totalRows; i++) {
-    const category = categories[i % 5];
-    const amount = (Math.random() * 1000).toFixed(2);
-    const status = statuses[i % 3];
-    const line = `${i}, ${category}, ${amount}, ${status}\n`;
+  await new Promise((res, rej) => {
+    ws.on("error", rej);
+    ws.write("id, category, amount, status\n");
 
-    if (!ws.write(line)) {
-      await new Promise((res) => ws.once("drain", res));
-    }
-  }
+    (async () => {
+      for (let i = 1; i <= totalRows; i++) {
+        const category = categories[i % 5];
+        const amount = (Math.random() * 1000).toFixed(2);
+        const status = statuses[i % 3];
+        const line = `${i}, ${category}, ${amount}, ${status}\n`;
 
-  await new Promise((res) => ws.end(res));
+        if (!ws.write(line)) {
+          await new Promise((res) => ws.once("drain", res));
+        }
+      }
+
+      ws.end(res);
+    })().catch(rej);
+  });
 }
 
 async function* readCSV(filePath) {
+  const stream = fs.createReadStream(filePath);
   const rl = readline.createInterface({
-    input: fs.createReadStream(filePath),
+    input: stream,
     crlfDelay: Infinity,
   });
 
+  let streamError = null;
+  stream.on("error", (error) => {
+    streamError = error;
+    rl.close();
+  });
+
   let first = true;
+
   for await (const line of rl) {
+    if (streamError) throw streamError;
     if (first) {
       first = false;
       continue;
@@ -45,6 +60,8 @@ async function* readCSV(filePath) {
       status: status.trim(),
     };
   }
+
+  if (streamError) throw streamError;
 }
 
 async function* filter(source, fn) {
