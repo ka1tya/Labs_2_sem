@@ -8,10 +8,6 @@ const levels = {
   ERROR: 30,
 };
 
-function shouldLog(msgLevel, minLevel) {
-  return (levels[msgLevel] ?? 0) >= (levels[minLevel] ?? 0);
-}
-
 function isPromise(val) {
   return val && typeof val.then === "function";
 }
@@ -46,100 +42,71 @@ function fileTransport(filePath) {
 
   return {
     write(_level, message) {
-      if (!dirReady) {
-        fs.mkdirSync(path.dirname(fullPath), { recursive: true });
-      }
+      fs.mkdirSync(path.dirname(fullPath), { recursive: true });
       fs.appendFileSync(fullPath, message + "\n", "utf8");
     },
   };
 }
 
 function log({ level = "INFO", logger, name } = {}) {
-  logger = logger || new Logger();
+  if (!logger) {
+    throw new Error("Logger must be provided");
+  }
 
   return function decorator(fn) {
     const fnName = name || fn.name || "anonymous";
 
-    if (level === "ERROR") {
-      function wrappedError(...args) {
-        const start = Date.now();
-
-        let result;
-        try {
-          result = fn.apply(this, args);
-        } catch (error) {
-          logger.error(fnName, {
-            args,
-            error: error.message,
-            durationMs: Date.now() - start,
-          });
-          throw error;
-        }
-
-        if (result && typeof result.then === "function") {
-          return result.catch((error) => {
-            logger.error(fnName, {
-              args,
-              error: error.message,
-              durationMs: Date.now() - start,
-            });
-            throw error;
-          });
-        }
-
-        return result;
-      }
-
-      Object.defineProperty(wrappedError, "name", { value: fnName });
-      return wrappedError;
-    }
-
-    function wrapped(...args) {
+    return function (...args) {
       const start = Date.now();
 
-      logger.log(level, fnName, {
-        args,
-      });
+      if (level !== "ERROR") {
+        logger.log(level, {
+          args,
+          level,
+          function: fnName,
+          timestamp: new Date().toISOString(),
+        });
+      }
 
-      let result;
       try {
-        result = fn.apply(this, args);
+        const result = fn.apply(this, args);
+
+        if (isPromise(result)) {
+          return result
+            .then((res) => {
+              if (level !== "ERROR") {
+                logger.log(level, {
+                  result: res,
+                  level,
+                  function: fnName,
+                  timestamp: new Date().toISOString(),
+                  durationMs: Date.now() - start,
+                });
+              }
+              return res;
+            })
+            .catch((error) => {
+              logger.error({
+                timestamp: new Date().toISOString(),
+                level: "ERROR",
+                function: fnName,
+                error: error.message,
+                durationMs: Date.now() - start,
+              });
+              throw error;
+            });
+        }
+        return result;
       } catch (error) {
-        logger.error(fnName, {
+        logger.error({
+          timestamp: new Date().toISOString(),
+          level: "ERROR",
+          function: fnName,
           error: error.message,
           durationMs: Date.now() - start,
         });
         throw error;
       }
-
-      if (result && typeof result.then === "function") {
-        return result.then(
-          (value) => {
-            logger.log(level, fnName, {
-              result: value,
-              durationMs: Date.now() - start,
-            });
-            return value;
-          },
-          (error) => {
-            logger.error(fnName, {
-              error: error.message,
-              durationMs: Date.now() - start,
-            });
-            throw error;
-          },
-        );
-      }
-
-      logger.log(level, fnName, {
-        result,
-        durationMs: Date.now() - start,
-      });
-
-      return result;
-    }
-
-    Object.defineProperty(wrapped, "name", { value: fnName });
-    return wrapped;
+    };
   };
 }
