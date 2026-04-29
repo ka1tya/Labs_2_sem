@@ -2,8 +2,8 @@ const jwt = require("jsonwebtoken");
 
 class JwtStrategy {
   constructor({ secret, accessToken, refreshFn }) {
-    if (!secret) throw new Error("JwtStrategy: secret обов'язковий");
-    if (!refreshFn) throw new Error("JwtStrategy: refreshFn обов'язкова");
+    if (!secret) throw new Error("JwtStrategy: secret required");
+    if (!refreshFn) throw new Error("JwtStrategy: refreshFn required");
 
     this.name = "JWT";
     this.secret = secret;
@@ -43,6 +43,25 @@ class JwtStrategy {
     } catch (error) {
       return null;
     }
+  }
+
+  async getHeaders() {
+    if (!this.accessToken || Date.now() >= this.expiresAt - 30000) {
+      await this.refresh();
+    }
+    return { Authorization: `Bearer ${this.accessToken}` };
+  }
+
+  canRefresh() {
+    return true;
+  }
+
+  async refresh() {
+    console.log("Refreshing access token...");
+    const { accessToken, expiresIn } = await this.refreshFn();
+    this.accessToken = accessToken;
+    this.expiresAt = Date.now() + expiresIn * 1000;
+    console.log(`Token updated, valid for ${expiresIn}s`);
   }
 }
 

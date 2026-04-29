@@ -12,6 +12,48 @@ function shouldLog(msgLevel, minLevel) {
   return (levels[msgLevel] ?? 0) >= (levels[minLevel] ?? 0);
 }
 
+function isPromise(val) {
+  return val && typeof val.then === "function";
+}
+
+function textFormatter(entry) {
+  const base = `[${entry.timestamp}] [${entry.level}] ${entry.function}`;
+  const parts = [];
+  if (entry.args !== undefined)
+    parts.push(`args:${JSON.stringify(entry.args)}`);
+  if (entry.result !== undefined)
+    parts.push(`result:${JSON.stringify(entry.result)}`);
+  if (entry.error !== undefined) parts.push(`error:"${entry.error}"`);
+  if (entry.durationMs !== undefined) parts.push(`${entry.durationMs}ms`);
+
+  return parts.length ? `${base} → ${parts.join("  ")}` : base;
+}
+
+function jsonFormatter(entry) {
+  return JSON.stringify(entry);
+}
+
+const consoleTransport = {
+  write(level, message) {
+    if (level === "ERROR") console.error(message);
+    else if (level === "WARN") console.warn(message);
+    else console.log(message);
+  },
+};
+
+function fileTransport(filePath) {
+  const fullPath = path.resolve(filePath);
+
+  return {
+    write(_level, message) {
+      if (!dirReady) {
+        fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+      }
+      fs.appendFileSync(fullPath, message + "\n", "utf8");
+    },
+  };
+}
+
 function log({ level = "INFO", logger, name } = {}) {
   logger = logger || new Logger();
 
