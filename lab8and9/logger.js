@@ -8,6 +8,10 @@ const levels = {
   ERROR: 30,
 };
 
+function shouldLog(current, min) {
+  return (levels[current] || 0) >= (levels[min] || 0);
+}
+
 function isPromise(val) {
   return val && typeof val.then === "function";
 }
@@ -41,11 +45,55 @@ function fileTransport(filePath) {
   const fullPath = path.resolve(filePath);
 
   return {
-    write(_level, message) {
+    write(level, message) {
       fs.mkdirSync(path.dirname(fullPath), { recursive: true });
       fs.appendFileSync(fullPath, message + "\n", "utf8");
     },
   };
+}
+
+class Logger {
+  constructor({
+    minLevel = "DEBUG",
+    formatter = JSON.stringify,
+    transports = [],
+  } = {}) {
+    this.minLevel = minLevel;
+    this.formatter = formatter;
+    this.transports = transports;
+  }
+
+  log(level, entry = {}) {
+    if (!shouldLog(level, this.minLevel)) return;
+
+    const fullEntry = {
+      timestamp: new Date().toISOString(),
+      level,
+      ...entry,
+    };
+    const line = this.formatter(fullEntry);
+
+    this.transports.forEach((transport) => {
+      try {
+        transport.write(level, line);
+      } catch (error) {
+        console.error("Logger error:", error.message);
+      }
+    });
+  }
+
+  debug(entry) {
+    this.log("DEBUG", entry);
+  }
+  info(entry) {
+    this.log("INFO", entry);
+  }
+  warn(entry) {
+    this.log("WARN", entry);
+  }
+  error(entry) {
+    this.log("ERROR", entry);
+  }
 }
 
 function log({ level = "INFO", logger, name } = {}) {
@@ -62,9 +110,7 @@ function log({ level = "INFO", logger, name } = {}) {
       if (level !== "ERROR") {
         logger.log(level, {
           args,
-          level,
           function: fnName,
-          timestamp: new Date().toISOString(),
         });
       }
 
@@ -77,9 +123,7 @@ function log({ level = "INFO", logger, name } = {}) {
               if (level !== "ERROR") {
                 logger.log(level, {
                   result: res,
-                  level,
                   function: fnName,
-                  timestamp: new Date().toISOString(),
                   durationMs: Date.now() - start,
                 });
               }
@@ -87,8 +131,6 @@ function log({ level = "INFO", logger, name } = {}) {
             })
             .catch((error) => {
               logger.error({
-                timestamp: new Date().toISOString(),
-                level: "ERROR",
                 function: fnName,
                 error: error.message,
                 durationMs: Date.now() - start,
@@ -96,11 +138,17 @@ function log({ level = "INFO", logger, name } = {}) {
               throw error;
             });
         }
+
+        if (level !== "ERROR") {
+          logger.log(level, {
+            result,
+            function: fnName,
+            durationMs: Date.now() - start,
+          });
+        }
         return result;
       } catch (error) {
         logger.error({
-          timestamp: new Date().toISOString(),
-          level: "ERROR",
           function: fnName,
           error: error.message,
           durationMs: Date.now() - start,
@@ -110,3 +158,14 @@ function log({ level = "INFO", logger, name } = {}) {
     };
   };
 }
+
+module.exports = {
+  log,
+  Logger,
+  levels,
+  shouldLog,
+  textFormatter,
+  jsonFormatter,
+  consoleTransport,
+  fileTransport,
+};
