@@ -17,7 +17,7 @@ function isPromise(val) {
 }
 
 function textFormatter(entry) {
-  const base = `[${entry.timestamp}] [${entry.level}] ${entry.function}`;
+  const base = `[${entry.timestamp}] [${entry.level}] ${entry.function || entry.message || ""}`;
   const parts = [];
   if (entry.args !== undefined)
     parts.push(`args:${JSON.stringify(entry.args)}`);
@@ -66,10 +66,12 @@ class Logger {
   log(level, entry = {}) {
     if (!shouldLog(level, this.minLevel)) return;
 
+    const normalized = typeof entry === "string" ? { message: entry } : entry;
+
     const fullEntry = {
       timestamp: new Date().toISOString(),
       level,
-      ...entry,
+      ...normalized,
     };
     const line = this.formatter(fullEntry);
 
