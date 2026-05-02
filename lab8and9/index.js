@@ -10,9 +10,12 @@ const {
 const { AuthProxy } = require("./proxies/AuthProxy");
 const { ApiKeyStrategy } = require("./strategies/ApiKey");
 const { JwtStrategy } = require("./strategies/Jwt");
+const { BaseClient } = require("./baseClient");
+const { GithubClient } = require("./services/GitHubService");
 
 const DEMO_API_KEY = process.env.DEMO_API_KEY || "demo-key";
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN || "";
 
 const logger = new Logger({
   minLevel: "DEBUG",
@@ -39,15 +42,21 @@ function buildStrategy() {
 
   return new JwtStrategy({
     secret: JWT_SECRET,
+    accessToken: GITHUB_TOKEN,
     refreshFn: async () => {
       logger.debug("refreshFn called");
-      return { accessToken: "new-token", expiresIn: 3600 };
+      return { accessToken: GITHUB_TOKEN || "new-token", expiresIn: 3600 };
     },
   });
 }
 
 const client = new FakeClient();
 const authClient = new AuthProxy(client, buildStrategy());
+
+const baseClient = new BaseClient();
+const loggedClient = new LoggingProxy(baseClient, logger);
+const authRealClient = new AuthProxy(loggedClient, buildStrategy());
+const github = new GitHubService(authRealClient);
 
 async function demo() {
   logger.info("Demo start");
@@ -92,6 +101,17 @@ async function demo() {
   logger.info("Switching to API Key strategy:");
   authClient.setStrategy(new ApiKeyStrategy({ apiKey: DEMO_API_KEY }));
   logger.info({ message: "Strategy:", result: authClient.getName() });
+
+  logger.info("\nGitHubService demo:");
+  try {
+    const user = await github.getUser("octocat");
+    logger.info({ message: "GitHub user", result: user.login });
+
+    const repos = await github.listRepos("octocat");
+    logger.info({ message: "Repos count", result: repos.length });
+  } catch (err) {
+    logger.error({ message: "GitHub request failed", error: err.message });
+  }
 
   const jsonLogger = new Logger({
     minLevel: "INFO",
